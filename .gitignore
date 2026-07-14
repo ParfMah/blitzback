@@ -1,0 +1,24 @@
+# Fichiers d'environnement (contiennent des secrets)
+.env
+.env.local
+.env.production
+
+# Dépendances Node.js
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+
+# Uploads temporaires
+uploads/
+temp/
