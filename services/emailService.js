@@ -14,6 +14,42 @@ const { transporter } = require('../config/email');
 const Message = require('../models/Message');
 
 /* ----------------------------------------------------------
+   ENVOI VIA L'API HTTP DE BREVO (port 443)
+   Render bloque le SMTP sortant (ports 25/465/587) sur les
+   instances gratuites. L'API HTTP de Brevo contourne ce blocage
+   puisqu'elle passe en HTTPS, comme n'importe quel appel API classique.
+   Utilisée automatiquement si BREVO_API_KEY est défini dans .env.
+---------------------------------------------------------- */
+const sendViaBrevoApi = async ({ to, subject, html, text }) => {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: {
+        name: process.env.EMAIL_FROM_NAME || 'Blitz Leihen',
+        email: process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER || process.env.EMAIL_USER,
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || `Brevo API a répondu avec le statut ${response.status}`);
+  }
+
+  return { messageId: data.messageId };
+};
+
+/* ----------------------------------------------------------
    COULEURS ET STYLES COMMUNS (inline CSS pour compatibilité email)
 ---------------------------------------------------------- */
 const BRAND = {
@@ -440,14 +476,22 @@ const sendEmail = async ({ to, subject, html, demande, type }) => {
   const result = { success: false, messageId: null, error: null };
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${process.env.EMAIL_FROM_NAME || 'Blitz Leihen'}" <${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-      // Version texte brut (accessibilité + anti-spam)
-      text: subject,
-    });
+    let info;
+
+    if (process.env.BREVO_API_KEY) {
+      // Contourne le blocage SMTP de Render (voir sendViaBrevoApi ci-dessus)
+      info = await sendViaBrevoApi({ to, subject, html, text: subject });
+    } else {
+      // Repli SMTP classique (fonctionne en local, ou sur un plan Render payant)
+      info = await transporter.sendMail({
+        from: `"${process.env.EMAIL_FROM_NAME || 'Blitz Leihen'}" <${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        html,
+        // Version texte brut (accessibilité + anti-spam)
+        text: subject,
+      });
+    }
 
     result.success = true;
     result.messageId = info.messageId;
