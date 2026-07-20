@@ -472,7 +472,7 @@ const emailChangementStatut = async (demande) => {
    FONCTION GÉNÉRIQUE D'ENVOI
    Envoie l'email via Nodemailer et trace dans MongoDB
 ---------------------------------------------------------- */
-const sendEmail = async ({ to, subject, html, demande, type }) => {
+/* const sendEmail = async ({ to, subject, html, demande, type }) => {
   const result = { success: false, messageId: null, error: null };
 
   try {
@@ -528,6 +528,84 @@ const sendEmail = async ({ to, subject, html, demande, type }) => {
         statut: 'echec',
         erreur: error.message,
       }).catch(() => { }); // Ignore l'erreur de sauvegarde (DB peut être aussi KO)
+    }
+  }
+
+  return result;
+};
+*/
+
+/* ----------------------------------------------------------
+   FONCTION GÉNÉRIQUE D'ENVOI
+   Envoie l'email via Nodemailer (Gmail SMTP) et trace dans MongoDB
+---------------------------------------------------------- */
+const sendEmail = async ({ to, subject, html, demande, type }) => {
+  const result = { success: false, messageId: null, error: null };
+
+  try {
+    let info;
+
+    /* --- ANCIEN CODE BREVO (Commenté pour forcer Gmail SMTP) ---
+    if (process.env.BREVO_API_KEY) {
+      // Contourne le blocage SMTP de Render (voir sendViaBrevoApi ci-dessus)
+      info = await sendViaBrevoApi({ to, subject, html, text: subject });
+    } else {
+      // Repli SMTP classique (fonctionne en local, ou sur un plan Render payant)
+      info = await transporter.sendMail({
+        from: `"${process.env.EMAIL_FROM_NAME || 'Blitz Leihen'}" <${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        html,
+        // Version texte brut (accessibilité + anti-spam)
+        text: subject,
+      });
+    }
+    ------------------------------------------------------------- */
+
+    // --- NOUVEAU CODE : Utilisation directe de Nodemailer (Gmail SMTP) ---
+    info = await transporter.sendMail({
+      from: `"${process.env.EMAIL_FROM_NAME || 'Blitz Leihen'}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text: subject,
+    });
+
+    result.success = true;
+    result.messageId = info.messageId;
+
+    // Traçabilité dans MongoDB
+    if (demande?._id) {
+      await Message.create({
+        demande: demande._id,
+        type,
+        sujet: subject,
+        corps: `Email envoyé à ${to}`,
+        expediteur: process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER,
+        destinataire: to,
+        statut: 'envoye',
+        dateEnvoi: new Date(),
+        meta: { messageId: info.messageId },
+      });
+    }
+
+    console.log(`✅ Email [${type}] envoyé → ${to}`);
+
+  } catch (error) {
+    result.error = error.message;
+    console.error(`❌ Email [${type}] échec → ${to} :`, error.message);
+
+    // Tracer l'échec
+    if (demande?._id) {
+      await Message.create({
+        demande: demande._id,
+        type,
+        sujet: subject,
+        corps: `Échec d'envoi à ${to} : ${error.message}`,
+        destinataire: to,
+        statut: 'echec',
+        erreur: error.message,
+      }).catch(() => { }); // Ignore l'erreur de sauvegarde
     }
   }
 
