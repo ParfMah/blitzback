@@ -48,6 +48,16 @@ const app        = express();
 const httpServer = http.createServer(app);
 const PORT       = process.env.PORT || 3000;
 
+/**
+ * IMPORTANT derrière un reverse proxy (Nginx sur le VPS) :
+ * indique à Express qu'il doit faire confiance au 1er proxy en amont
+ * pour lire la vraie IP du visiteur dans X-Forwarded-For.
+ * Sans ça : express-rate-limit ne peut pas identifier les visiteurs
+ * individuellement (avertissement ERR_ERL_UNEXPECTED_X_FORWARDED_FOR),
+ * et req.ip / les logs affichent l'IP interne de Nginx au lieu du visiteur.
+ */
+app.set('trust proxy', 1);
+
 // -------------------------------------------------------
 // 2. MIDDLEWARES DE SÉCURITÉ
 // -------------------------------------------------------
