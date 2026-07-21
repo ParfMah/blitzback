@@ -705,36 +705,6 @@ const emailConfirmationContact = async (contactData) => {
   });
 };
 
-/* ----------------------------------------------------------
-   7. RÉPONSE PERSONNALISÉE AU CLIENT (Template Uniforme)
-   À utiliser pour répondre aux messages ou envoyer un suivi
----------------------------------------------------------- */
-const emailReponsePersonnalisee = async (donneesClient) => {
-  const sujet = `⚡ ${donneesClient.sujet || 'Ihre Anfrage'} — Blitz Leihen`;
-
-  const contenu = `
-    <h2 style="margin:0 0 8px;font-size:24px;color:${BRAND.primary};font-family:Georgia,serif;">
-      Guten Tag ${donneesClient.nom || donneesClient.vorname || 'Kunde'},
-    </h2>
-    <p style="margin:0 0 24px;font-size:15px;color:${BRAND.muted};line-height:1.7;">
-      ${donneesClient.message || 'Vielen Dank für Ihre Geduld. Hier ist eine Rückmeldung zu Ihrem Anliegen.'}
-    </p>
-
-    <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin:30px 0 0;">
-      Mit freundlichen Grüßen,<br>
-      <strong style="color:${BRAND.primary};">Ihr Blitz Leihen Team</strong>
-    </p>`;
-
-  return sendEmail({
-    to: donneesClient.email,
-    replyTo: process.env.CONSEILLER_EMAIL || 'info@blitz-leihen.de',
-    subject: sujet,
-    html: templateBase(contenu), // C'est cette fonction qui applique l'identité visuelle globale[span_2](start_span)[span_2](end_span)
-    demande: donneesClient.demandeId || null,
-    type: 'email_reponse_client',
-  });
-};
-
   module.exports = {
     emailConfirmationClient,
     emailNotificationConseiller,
@@ -742,5 +712,4 @@ const emailReponsePersonnalisee = async (donneesClient) => {
     emailAlertAbandon,
     emailMessageContact,
     emailConfirmationContact,
-    emailReponsePersonnalisee,
   };
