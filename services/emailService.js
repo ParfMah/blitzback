@@ -722,8 +722,8 @@ const emailMessageContact = async (contactData) => {
    Envoyé au visiteur pour lui confirmer la bonne réception de son message.
 ---------------------------------------------------------- */
 /* ----------------------------------------------------------
-   6. ACCUSÉ DE RÉCEPTION AU CLIENT (Format texte brut / Pleine page)
-   Layout minimaliste sans template lourd, idéal pour les longs messages.
+   6. ACCUSÉ DE RÉCEPTION AU CLIENT (Format e-mail normal + Template global)
+   Intégré proprement dans le template global de l'application.
 ---------------------------------------------------------- */
 const emailConfirmationContact = async (contactData) => {
   const nomClient = contactData.nom || contactData.name || 'Guten Tag';
@@ -731,36 +731,18 @@ const emailConfirmationContact = async (contactData) => {
   const messageClient = contactData.message || contactData.nachricht || '';
 
   const sujet = `✅ Wir haben Ihre Nachricht erhalten — Blitz Leihen`;
-  
-  // Template ultra-léger et fluide (pleine page sans structure rigide)
-  const contenuPleinePage = `
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blitz Leihen</title>
-</head>
-<body style="margin:0;padding:20px;background-color:#FFFFFF;font-family:'Helvetica Neue',Arial,sans-serif;color:${BRAND.text};">
 
-  <div style="max-width:600px;margin:0 auto;padding:20px;">
-    
-    <!-- En-tête simple -->
-    <p style="font-size:12px;color:${BRAND.accent};text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:0 0 10px;">
-      ⚡ Blitz Leihen — Kundenservice
-    </p>
-
-    <h2 style="margin:0 0 16px;font-size:22px;color:${BRAND.primary};font-family:Georgia,serif;">
-      Guten Tag ${nomClient},
+  const contenu = `
+    <h2 style="margin:0 0 8px;font-size:24px;color:${BRAND.primary};font-family:Georgia,serif;">
+      Vielen Dank für Ihre Nachricht, ${nomClient}!
     </h2>
-
-    <p style="font-size:15px;color:${BRAND.muted};line-height:1.6;margin:0 0 20px;">
-      wir haben Ihre Nachricht dankend erhalten und werden Ihr Anliegen innerhalb von <strong>24 Stunden</strong> bearbeiten.
+    <p style="margin:0 0 24px;font-size:15px;color:${BRAND.muted};line-height:1.7;">
+      Wir haben Ihre Anfrage erhalten und werden sie innerhalb von <strong>24 Stunden</strong> prüfen. 
+      Unser Team wird sich anschließend direkt bei Ihnen melden.
     </p>
 
-    <hr style="border:none;border-top:1px solid #E2E8F0;margin:20px 0;">
+    <hr style="border:none;border-top:1px solid #DDE3EE;margin:24px 0;">
 
-    <!-- Rappel du sujet -->
     <p style="margin:0 0 4px;font-size:11px;color:${BRAND.muted};text-transform:uppercase;letter-spacing:1px;font-weight:600;">
       Betreff / Sujet :
     </p>
@@ -768,36 +750,24 @@ const emailConfirmationContact = async (contactData) => {
       ${sujetClient}
     </p>
 
-    <!-- Corps du message du client -->
     <p style="margin:0 0 8px;font-size:11px;color:${BRAND.muted};text-transform:uppercase;letter-spacing:1px;font-weight:600;">
       Ihre Nachricht / Votre message :
     </p>
     
-    <div style="background:#F8FAFC;border-left:3px solid ${BRAND.primary};padding:16px;border-radius:4px;font-size:13px;color:${BRAND.text};line-height:1.6;white-space:pre-wrap;word-break:break-word;margin-bottom:30px;">
+    <!-- Texte fluide qui s'allonge naturellement sans aucun cadre bloquant -->
+    <div style="font-size:14px;color:${BRAND.text};line-height:1.6;white-space:pre-wrap;word-break:break-word;margin-bottom:30px;">
       ${messageClient}
     </div>
 
-    <!-- Signature sobre -->
-    <p style="font-size:13px;color:${BRAND.muted};line-height:1.5;margin:0 0 20px;">
+    <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin:30px 0 0;">
       Mit freundlichen Grüßen,<br>
-      <strong>Ihr Blitz Leihen Team</strong><br>
-      <span style="font-size:12px;color:#718096;">Unter den Linden 42, 10117 Berlin | Tel: +49 (0) 800 123 456 7</span>
-    </p>
+      <strong style="color:${BRAND.primary};">Ihr Blitz Leihen Team</strong>
+    </p>`;
 
-    <p style="font-size:11px;color:#A0AEC0;border-top:1px solid #EDF2F7;padding-top:15px;margin-top:30px;">
-      Diese E-Mail wurde automatisch als Eingangsbestätigung versendet.
-    </p>
-
-  </div>
-
-</body>
-</html>`;
-
-  // On envoie directement le HTML brut sans passer par templateBase
   return sendEmail({
     to: contactData.email,
     subject: sujet,
-    html: contenuPleinePage,
+    html: templateBase(contenu),
     demande: null,
     type: 'email_client_contact',
   });
