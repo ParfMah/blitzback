@@ -739,10 +739,20 @@ const emailConfirmationContact = async (contactData) => {
     <h3 style="margin:24px 0 8px;font-size:14px;color:${BRAND.primary};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${BRAND.accent};padding-bottom:8px;">
       Zusammenfassung Ihrer Nachricht
     </h3>
+    
     ${tableauDonnees([
       { label: 'Betreff / Sujet', valeur: sujetClient },
-      { label: 'Nachricht', valeur: messageClient.replace(/\n/g, '<br>') },
     ])}
+
+    <!-- Boîte dédiée au message avec retour à la ligne propre et style épuré -->
+    <div style="margin:16px 0;background:${BRAND.bg};border:1px solid #DDE3EE;border-radius:8px;padding:20px;">
+      <p style="margin:0 0 8px;font-size:11px;color:${BRAND.muted};text-transform:uppercase;letter-spacing:1px;font-weight:600;">
+        Nachricht Inhalt :
+      </p>
+      <div style="font-size:13px;color:${BRAND.text};line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;">
+        ${messageClient}
+      </div>
+    </div>
 
     <div style="background:${BRAND.bg};border-radius:8px;padding:20px;text-align:center;margin-top:24px;">
       <p style="margin:0 0 12px;font-size:13px;color:${BRAND.muted};">
