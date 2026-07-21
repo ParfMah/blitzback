@@ -722,13 +722,19 @@ const emailMessageContact = async (contactData) => {
    Envoyé au visiteur pour lui confirmer la bonne réception de son message.
 ---------------------------------------------------------- */
 /* ----------------------------------------------------------
-   6. ACCUSÉ DE RÉCEPTION AU CLIENT (Format e-mail normal + Template global)
-   Intégré proprement dans le template global de l'application.
+   6. ACCUSÉ DE RÉCEPTION AU CLIENT (Version Robuste & Sécurisée)
 ---------------------------------------------------------- */
 const emailConfirmationContact = async (contactData) => {
-  const nomClient = contactData.nom || contactData.name || 'Guten Tag';
-  const sujetClient = contactData.sujet || contactData.betreff || 'Ihre Anfrage';
-  const messageClient = contactData.message || contactData.nachricht || '';
+  // Sécurisation et nettoyage des données entrantes pour éviter les injections ou les undefined
+  const nomClient = (contactData.nom || contactData.name || 'Guten Tag').trim();
+  const sujetClient = (contactData.sujet || contactData.betreff || 'Ihre Anfrage').trim();
+  
+  // Nettoyage basique du message pour préserver les retours à la ligne tout en évitant le HTML brut risqué
+  const messageBrut = contactData.message || contactData.nachricht || '';
+  const messageClient = messageBrut
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 
   const sujet = `✅ Wir haben Ihre Nachricht erhalten — Blitz Leihen`;
 
@@ -743,21 +749,31 @@ const emailConfirmationContact = async (contactData) => {
 
     <hr style="border:none;border-top:1px solid #DDE3EE;margin:24px 0;">
 
-    <p style="margin:0 0 4px;font-size:11px;color:${BRAND.muted};text-transform:uppercase;letter-spacing:1px;font-weight:600;">
-      Betreff / Sujet :
-    </p>
-    <p style="margin:0 0 20px;font-size:14px;font-weight:600;color:${BRAND.primary};">
-      ${sujetClient}
-    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="padding-bottom:4px;font-size:11px;color:${BRAND.muted};text-transform:uppercase;letter-spacing:1px;font-weight:600;">
+          Betreff / Sujet
+        </td>
+      </tr>
+      <tr>
+        <td style="font-size:14px;font-weight:600;color:${BRAND.primary};">
+          ${sujetClient}
+        </td>
+      </tr>
+    </table>
 
-    <p style="margin:0 0 8px;font-size:11px;color:${BRAND.muted};text-transform:uppercase;letter-spacing:1px;font-weight:600;">
-      Ihre Nachricht / Votre message :
-    </p>
-    
-    <!-- Texte fluide qui s'allonge naturellement sans aucun cadre bloquant -->
-    <div style="font-size:14px;color:${BRAND.text};line-height:1.6;white-space:pre-wrap;word-break:break-word;margin-bottom:30px;">
-      ${messageClient}
-    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="padding-bottom:8px;font-size:11px;color:${BRAND.muted};text-transform:uppercase;letter-spacing:1px;font-weight:600;">
+          Ihre Nachricht / Votre message
+        </td>
+      </tr>
+      <tr>
+        <td style="font-size:14px;color:${BRAND.text};line-height:1.6;white-space:pre-wrap;word-break:break-word;background:#F8FAFC;padding:16px;border-radius:6px;border:1px solid #E2E8F0;">
+          ${messageClient}
+        </td>
+      </tr>
+    </table>
 
     <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin:30px 0 0;">
       Mit freundlichen Grüßen,<br>
@@ -766,6 +782,7 @@ const emailConfirmationContact = async (contactData) => {
 
   return sendEmail({
     to: contactData.email,
+    replyTo: contactData.email, // Permet au client de répondre directement si besoin
     subject: sujet,
     html: templateBase(contenu),
     demande: null,
