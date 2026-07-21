@@ -721,15 +721,10 @@ const emailMessageContact = async (contactData) => {
    6. ACCUSÉ DE RÉCEPTION AU CLIENT (Formulaire de Contact)
    Envoyé au visiteur pour lui confirmer la bonne réception de son message.
 ---------------------------------------------------------- */
-/* ----------------------------------------------------------
-   6. ACCUSÉ DE RÉCEPTION AU CLIENT (Version Robuste & Sécurisée)
----------------------------------------------------------- */
 const emailConfirmationContact = async (contactData) => {
-  // Sécurisation et nettoyage des données entrantes pour éviter les injections ou les undefined
   const nomClient = (contactData.nom || contactData.name || 'Guten Tag').trim();
   const sujetClient = (contactData.sujet || contactData.betreff || 'Ihre Anfrage').trim();
   
-  // Nettoyage basique du message pour préserver les retours à la ligne tout en évitant le HTML brut risqué
   const messageBrut = contactData.message || contactData.nachricht || '';
   const messageClient = messageBrut
     .replace(/&/g, '&amp;')
@@ -768,8 +763,9 @@ const emailConfirmationContact = async (contactData) => {
           Ihre Nachricht / Votre message
         </td>
       </tr>
+      <!-- SUPPRESSION DU FOND GRIS ET DE LA BORDURE : Le texte prend toute la largeur -->
       <tr>
-        <td style="font-size:14px;color:${BRAND.text};line-height:1.6;white-space:pre-wrap;word-break:break-word;background:#F8FAFC;padding:16px;border-radius:6px;border:1px solid #E2E8F0;">
+        <td style="font-size:14px;color:${BRAND.text};line-height:1.6;white-space:pre-wrap;word-break:break-word;padding:0;">
           ${messageClient}
         </td>
       </tr>
@@ -782,7 +778,7 @@ const emailConfirmationContact = async (contactData) => {
 
   return sendEmail({
     to: contactData.email,
-    replyTo: contactData.email, // Permet au client de répondre directement si besoin
+    replyTo: contactData.email,
     subject: sujet,
     html: templateBase(contenu),
     demande: null,
