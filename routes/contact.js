@@ -12,12 +12,13 @@ const express = require('express');
 const router  = express.Router();
 
 const ctrl = require('../controllers/contactController');
-const { validationContact } = require('../middleware/validate');
+/** const { validationContact } = require('../middleware/validate'); */
 
 /**
  * POST /api/contact
  * Envoie un message libre depuis kontakt.html.
  */
-router.post('/', validationContact, ctrl.envoyerMessageContact);
+/** router.post('/', validationContact, ctrl.envoyerMessageContact);*/
+router.post('/', ctrl.envoyerMessageContact);
 
 module.exports = router;
