@@ -680,26 +680,33 @@ const emailAlertAbandon = async (data) => {
 Envoyé lorsqu'un visiteur utilise le formulaire de contact général.
 ---------------------------------------------------------- */
 const emailMessageContact = async (contactData) => {
-  const sujet = `✉️ Nouveau message de contact — ${contactData.sujet || 'Général'} — ${contactData.nom}`;
+  // On récupère les valeurs en gérant toutes les variantes possibles
+  const nomClient = contactData.nom || contactData.name || '—';
+  const emailClient = contactData.email || '—';
+  const telClient = contactData.telephone || contactData.telefon || '—';
+  const sujetClient = contactData.sujet || contactData.betreff || 'Général';
+  const messageClient = contactData.message || contactData.nachricht || '—';
+
+  const sujet = `✉️ Nouveau message de contact — ${sujetClient} — ${nomClient}`;
   const contenu = `
     <div style="background:${BRAND.primary};border-radius:8px;padding:16px 20px;margin:0 0 28px;">
       <p style="margin:0;font-size:15px;color:${BRAND.white};font-weight:700;"> ✉️ Nouveau message reçu depuis la page Contact </p>
-      <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.85);"> De : <strong>${contactData.nom}</strong> (${contactData.email}) </p>
+      <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.85);"> De : <strong>${nomClient}</strong> (${emailClient}) </p>
     </div>
     
     ${tableauDonnees([
-      { label: 'Nom', valeur: contactData.nom },
-      { label: 'E-Mail', valeur: `<a href="mailto:${contactData.email}" style="color:${BRAND.primary};">${contactData.email}</a>` },
-      { label: 'Téléphone', valeur: contactData.telephone || '—' },
-      { label: 'Sujet', valeur: contactData.sujet || '—' },
+      { label: 'Nom', valeur: nomClient },
+      { label: 'E-Mail', valeur: `<a href="mailto:${emailClient}" style="color:${BRAND.primary};">${emailClient}</a>` },
+      { label: 'Téléphone', valeur: telClient },
+      { label: 'Sujet', valeur: sujetClient },
     ])}
 
     <h3 style="margin:20px 0 8px;font-size:13px;color:${BRAND.primary};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${BRAND.accent};padding-bottom:6px;"> Message </h3>
     <div style="background:${BRAND.bg};border-radius:8px;padding:16px;font-size:14px;color:${BRAND.text};line-height:1.6;margin-top:8px;">
-      ${contactData.message ? contactData.message.replace(/\n/g, '<br>') : '—'}
+      ${messageClient.replace(/\n/g, '<br>')}
     </div>
 
-    ${boutonCTA('Répondre au client →', `mailto:${contactData.email}`)}`;
+    ${boutonCTA('Répondre au client →', `mailto:${emailClient}`)}`;
 
   return sendEmail({
     to: destinatairesInternes(),
