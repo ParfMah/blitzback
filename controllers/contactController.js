@@ -45,7 +45,7 @@ exports.envoyerMessageContact = async (req, res, next) => {
 
     // Accusé de réception au visiteur — non bloquant, ne doit pas
     // faire échouer la réponse si l'envoi échoue.
-    emailService.emailConfirmationClient(data).catch((err) => {
+    emailService.emailConfirmationContact(data).catch((err) => {
       console.error('Erreur envoi accusé de réception contact (non bloquant) :', err.message);
     });
 

@@ -717,10 +717,58 @@ const emailMessageContact = async (contactData) => {
   });
 };
 
+/* ----------------------------------------------------------
+   6. ACCUSÉ DE RÉCEPTION AU CLIENT (Formulaire de Contact)
+   Envoyé au visiteur pour lui confirmer la bonne réception de son message.
+---------------------------------------------------------- */
+const emailConfirmationContact = async (contactData) => {
+  const nomClient = contactData.nom || contactData.name || 'Guten Tag';
+  const sujetClient = contactData.sujet || contactData.betreff || 'Ihre Anfrage';
+  const messageClient = contactData.message || contactData.nachricht || '';
+
+  const sujet = `✅ Wir haben Ihre Nachricht erhalten — Blitz Leihen`;
+  const contenu = `
+    <h2 style="margin:0 0 8px;font-size:24px;color:${BRAND.primary};font-family:Georgia,serif;">
+      Vielen Dank für Ihre Nachricht, ${nomClient}!
+    </h2>
+    <p style="margin:0 0 24px;font-size:15px;color:${BRAND.muted};line-height:1.7;">
+      Wir haben Ihre Anfrage erhalten und werden sie innerhalb von <strong>24 Stunden</strong> prüfen. 
+      Unser Team wird sich anschließend direkt bei Ihnen melden.
+    </p>
+
+    <h3 style="margin:24px 0 8px;font-size:14px;color:${BRAND.primary};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${BRAND.accent};padding-bottom:8px;">
+      Zusammenfassung Ihrer Nachricht
+    </h3>
+    ${tableauDonnees([
+      { label: 'Betreff / Sujet', valeur: sujetClient },
+      { label: 'Nachricht', valeur: messageClient.replace(/\n/g, '<br>') },
+    ])}
+
+    <div style="background:${BRAND.bg};border-radius:8px;padding:20px;text-align:center;margin-top:24px;">
+      <p style="margin:0 0 12px;font-size:13px;color:${BRAND.muted};">
+        Fragen oder dringendes Anliegen? Sie erreichen uns auch telefonisch.
+      </p>
+      <a href="tel:+498001234567"
+         style="display:inline-block;background:${BRAND.primary};color:${BRAND.white};
+                padding:12px 28px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;">
+        📞 +49 (0) 800 123 456 7
+      </a>
+    </div>`;
+
+  return sendEmail({
+    to: contactData.email,
+    subject: sujet,
+    html: templateBase(contenu),
+    demande: null,
+    type: 'email_client_contact',
+  });
+};
+
   module.exports = {
     emailConfirmationClient,
     emailNotificationConseiller,
     emailChangementStatut,
     emailAlertAbandon,
     emailMessageContact,
+    emailConfirmationContact,
   };
