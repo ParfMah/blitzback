@@ -153,6 +153,7 @@ const validationDemande = [
 
   /* --- Consentements obligatoires --- */
   body('datenschutz')
+    .optional()
     .custom(v => {
       if (v !== true && v !== 'true' && v !== 1) {
         throw new Error('Datenschutzerklärung muss akzeptiert werden');
