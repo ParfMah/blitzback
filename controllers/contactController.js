@@ -21,11 +21,11 @@ const emailService = require('../services/emailService');
 exports.envoyerMessageContact = async (req, res, next) => {
   try {
     const data = {
-      name:      req.body.name,
-      email:     req.body.email,
-      telefon:   req.body.telefon || '',
-      betreff:   req.body.betreff || '',
-      nachricht: req.body.nachricht,
+      name: req.body.name || req.body.nom || req.body.vorname || '—',
+      email: req.body.email || '—',
+      telefon: req.body.telefon || req.body.phone || '—',
+      betreff: req.body.betreff || req.body.sujet || req.body.subject || '—',
+      nachricht: req.body.nachricht || req.body.message || '—',
       visiteurLocalisationAffichage: req.body.visiteurLocalisationAffichage || '',
     };
 
