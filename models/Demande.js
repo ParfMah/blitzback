@@ -206,7 +206,7 @@ const demandeSchema = new mongoose.Schema({
   verwendungszweck: {
     type:    String,
     trim:    true,
-    maxlength: [1000, 'Verwendungszweck darf max. 1000 Zeichen haben'],
+    maxlength: [300, 'Verwendungszweck darf max. 300 Zeichen haben'],
     default: '',
   },
 
