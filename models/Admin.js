@@ -9,8 +9,8 @@
  *   - Tokens de réinitialisation de MDP avec expiration
  */
 
-const mongoose  = require('mongoose');
-const bcrypt    = require('bcryptjs');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const adminSchema = new mongoose.Schema({
 
@@ -18,19 +18,24 @@ const adminSchema = new mongoose.Schema({
      IDENTITÉ
   ------------------------------------------------------- */
   name: {
-    type:      String,
-    required:  [true, 'Name ist erforderlich'],
-    trim:      true,
+    type: String,
+    required: [true, 'Name ist erforderlich'],
+    trim: true,
     maxlength: [100, 'Name darf max. 100 Zeichen haben'],
   },
 
   email: {
-    type:      String,
-    required:  [true, 'E-Mail ist erforderlich'],
-    unique:    true,
+    type: String,
+    required: [true, 'E-Mail ist erforderlich'],
+    unique: true,
     lowercase: true,
-    trim:      true,
+    trim: true,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Ungültige E-Mail-Adresse'],
+  },
+  // 👉 AJOUTER CETTE LIGNE ICI :
+  avatar: {
+    type: String,
+    default: '', // URL de l'image de profil
   },
 
   /* -------------------------------------------------------
@@ -39,23 +44,23 @@ const adminSchema = new mongoose.Schema({
      grâce à `select: false`
   ------------------------------------------------------- */
   password: {
-    type:     String,
+    type: String,
     required: [true, 'Passwort ist erforderlich'],
     minlength: [8, 'Passwort muss mindestens 8 Zeichen haben'],
-    select:   false, // Jamais inclus dans les réponses par défaut
+    select: false, // Jamais inclus dans les réponses par défaut
   },
 
   /* -------------------------------------------------------
      RÔLE ET PERMISSIONS
   ------------------------------------------------------- */
   role: {
-    type:    String,
-    enum:    ['admin', 'superadmin', 'conseiller'],
+    type: String,
+    enum: ['admin', 'superadmin', 'conseiller'],
     default: 'conseiller',
   },
 
   actif: {
-    type:    Boolean,
+    type: Boolean,
     default: true,
   },
 
@@ -64,17 +69,17 @@ const adminSchema = new mongoose.Schema({
      Après 5 tentatives échouées : compte verrouillé 30 min
   ------------------------------------------------------- */
   loginTentativesEchouees: {
-    type:    Number,
+    type: Number,
     default: 0,
   },
 
   compteVerrouille: {
-    type:    Boolean,
+    type: Boolean,
     default: false,
   },
 
   verrouillageFin: {
-    type:    Date,
+    type: Date,
     default: null,
   },
 
@@ -82,12 +87,12 @@ const adminSchema = new mongoose.Schema({
      TRACKING DES CONNEXIONS
   ------------------------------------------------------- */
   derniereConnexion: {
-    type:    Date,
+    type: Date,
     default: null,
   },
 
   derniereConnexionIP: {
-    type:    String,
+    type: String,
     default: '',
   },
 
@@ -96,12 +101,12 @@ const adminSchema = new mongoose.Schema({
      Token temporaire envoyé par email (expire en 1h)
   ------------------------------------------------------- */
   resetPasswordToken: {
-    type:   String,
+    type: String,
     select: false,
   },
 
   resetPasswordExpires: {
-    type:   Date,
+    type: Date,
     select: false,
   },
 
@@ -120,7 +125,7 @@ adminSchema.pre('save', async function (next) {
 
   try {
     // salt=12 : bon équilibre sécurité/performance
-    const salt    = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (err) {
@@ -146,7 +151,7 @@ adminSchema.methods.enregistrerEchec = async function () {
   if (this.loginTentativesEchouees >= 5) {
     this.compteVerrouille = true;
     // Verrouillage de 30 minutes
-    this.verrouillageFin  = new Date(Date.now() + 30 * 60 * 1000);
+    this.verrouillageFin = new Date(Date.now() + 30 * 60 * 1000);
     console.warn(`⚠️  Compte admin verrouillé : ${this.email}`);
   }
 
@@ -159,10 +164,10 @@ adminSchema.methods.enregistrerEchec = async function () {
 ---------------------------------------------------------- */
 adminSchema.methods.reinitialiserTentatives = async function (ip) {
   this.loginTentativesEchouees = 0;
-  this.compteVerrouille        = false;
-  this.verrouillageFin         = null;
-  this.derniereConnexion       = new Date();
-  this.derniereConnexionIP     = ip || '';
+  this.compteVerrouille = false;
+  this.verrouillageFin = null;
+  this.derniereConnexion = new Date();
+  this.derniereConnexionIP = ip || '';
   await this.save();
 };
 
@@ -175,8 +180,8 @@ adminSchema.methods.estVerrouille = async function () {
 
   // Vérifier si le délai de verrouillage est dépassé
   if (this.verrouillageFin && this.verrouillageFin < new Date()) {
-    this.compteVerrouille        = false;
-    this.verrouillageFin         = null;
+    this.compteVerrouille = false;
+    this.verrouillageFin = null;
     this.loginTentativesEchouees = 0;
     await this.save();
     return false;
@@ -188,6 +193,7 @@ adminSchema.methods.estVerrouille = async function () {
 /* ----------------------------------------------------------
    VIRTUEL : Données publiques (sans MDP)
 ---------------------------------------------------------- */
+
 adminSchema.virtual('profilPublic').get(function () {
   return {
     id:    this._id,
@@ -195,6 +201,8 @@ adminSchema.virtual('profilPublic').get(function () {
     email: this.email,
     role:  this.role,
     actif: this.actif,
+    // 👉 AJOUTER CETTE LIGNE ICI :
+    avatar: this.avatar,
     derniereConnexion: this.derniereConnexion,
   };
 });

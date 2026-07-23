@@ -201,3 +201,51 @@ exports.compterNonLus = async (req, res, next) => {
     next(error);
   }
 };
+
+/* GET /api/chat/admin/non-lus */
+exports.compterNonLus = async (req, res, next) => {
+  try {
+    const total = await chatService.compterNonLusAdmin();
+    res.status(200).json({ success: true, data: { total } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================================
+// 👉 AJOUTER CETTE NOUVELLE FONCTION TOUT À LA FIN DU FICHIER :
+// ==========================================================
+exports.prendreEnChargeConversation = async (req, res, next) => {
+  try {
+    const conversationId = req.params.id;
+    const conseiller = req.admin; // Récupéré via le middleware `protect`
+
+    // 1. Mettre à jour la conversation pour l'assigner au conseiller
+    const conversation = await chatService.changerStatutConversation(conversationId, 'en_cours');
+    // Note: Si tu as une fonction dédiée pour l'assignation dans ton chatService, tu pourras l'adapter ici.
+
+    // 2. Générer le message d'accueil personnalisé avec le nom du conseiller
+    const texteAccueil = `Hallo! Mein Name ist ${conseiller.name} und ich übernehme jetzt Ihre Anfrage. Wie kann ich Ihnen heute helfen?`;
+
+    const { message } = await chatService.ajouterMessage(conversationId, {
+      role: 'admin',
+      texte: texteAccueil,
+      admin: conseiller,
+    });
+
+    // 3. Diffuser en temps réel via Socket.IO
+    const io = getIo(req);
+    if (io) {
+      io.to(`conversation:${conversation._id}`).emit('nouveau_message', message);
+      io.to('admins').emit('conversation_maj', {
+        conversationId: conversation._id,
+        dernierMessage: message.texte,
+        dernierMessageDate: message.createdAt,
+      });
+    }
+
+    res.status(200).json({ success: true, data: { conversation, message } });
+  } catch (error) {
+    next(error);
+  }
+};

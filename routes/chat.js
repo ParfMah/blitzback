@@ -44,4 +44,7 @@ router.post('/admin/conversations/:id/message', protect, validerTexte, ctrl.envo
 router.put('/admin/conversations/:id/statut', protect, ctrl.changerStatut);
 router.put('/admin/conversations/:id/lu', protect, ctrl.marquerLu);
 
+/* 👉 AJOUTER CETTE LIGNE ICI : */
+router.put('/admin/conversations/:id/prendre-en-charge', protect, ctrl.prendreEnChargeConversation);
+
 module.exports = router;
